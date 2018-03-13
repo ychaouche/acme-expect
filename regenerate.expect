@@ -1,0 +1,54 @@
+#!/usr/bin/expect 
+
+#  change the following variables to match your setup
+#  - user_account_public_key -> this is your letsencrypt account's public key
+#  - certificate_request_csr -> this is your SSL's Certificate Signing Request file.
+#  - email                   -> a contact e-mail.
+
+
+set user_account_public_key user_account.public_key
+set certificate_request_csr  certificate_request.csr 
+set email it_sys@mydomain.tld
+
+# how much time should we wait for a response from letsencrypt servers
+set timeout 10
+
+# this will hold the 3 first openssl commands
+set args {}
+
+
+# launching the script
+spawn python sign_csr.py -p $user_account_public_key $certificate_request_csr -e $email
+
+# capture the three openssl commands
+expect -re "openssl (.+?.json)" { lappend args $expect_out(1,string)}
+expect -re "openssl (.+?.json)" { lappend args $expect_out(1,string)}
+expect -re "openssl (.+?.json)" { lappend args $expect_out(1,string)}
+
+# execute the commands
+foreach arg $args {
+    exec openssl {*}[split $arg]
+}
+
+# "Press enter to continue"
+send "\r"
+
+
+# "We need you to sign one more document"
+expect -re "openssl (.+?.json)" { 
+    exec openssl {*}[split $expect_out(1,string)]
+}
+
+# "Press enter to continue"
+send "\r"
+
+
+# "Run the following python HTTP server on port 80"
+expect -re {sudo python -c "(.+?s.serve_forever\(\))"} {
+    exec ./disableport80
+    exec python -c $expect_out(1,string) &
+}
+
+# "Press enter when you're done"
+send "\r"
+interact
