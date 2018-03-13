@@ -1,5 +1,5 @@
 # acme-expect
-An expect script to automate diafygi's acme-nosudo.
+An expect script to automate diafygi's [acme-nosudo](https://github.com/diafygi/acme-nosudo)
 
 # Compatibilty
 The script has to disable port 80 on your webserver. The provided disableport80/enabledport80 script works only for Apache HTTPD on Debian (other distros may have different configuration schemes), but you can easily write your own for other distros or for nginx.
